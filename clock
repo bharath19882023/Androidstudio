@@ -1,0 +1,20 @@
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+
+class MainActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        // Assuming you have a TextClock widget in your layout with id "textClock"
+        val textClock = findViewById<TextClock>(R.id.textClock)
+
+        // Customize the time format if needed
+        // textClock.format12Hour = "hh:mm:ss a"
+        // textClock.format24Hour = "HH:mm:ss"
+
+        // Set any other configurations as needed
+        // textClock.timeZone = "GMT" // Set the time zone if necessary
+    }
+}
