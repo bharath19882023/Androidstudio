@@ -1,0 +1,137 @@
+package com.example.simplegame
+
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.os.Bundle
+import android.util.AttributeSet
+import android.view.KeyEvent
+import android.view.View
+import android.widget.FrameLayout
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import com.example.simplegame.databinding.ActivityMainBinding
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var gameView: GameView
+    private lateinit var scoreTextView: TextView
+    private var score = 0
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val frameLayout = FrameLayout(this)
+        gameView = GameView(this)
+        frameLayout.addView(gameView)
+
+        scoreTextView = TextView(this)
+        scoreTextView.text = "Score: $score"
+        scoreTextView.setTextColor(Color.BLACK)
+        scoreTextView.textSize = 20f
+
+        val params = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT
+        )
+
+        params.gravity = android.view.Gravity.TOP or android.view.Gravity.CENTER_HORIZONTAL
+        scoreTextView.layoutParams = params
+        frameLayout.addView(scoreTextView)
+
+        setContentView(frameLayout)
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        gameView.handleKeyPress(keyCode)
+        return super.onKeyDown(keyCode, event)
+    }
+
+    inner class GameView : View {
+        private var ballX = 100f
+        private var ballY = 100f
+        private var ballRadius = 20f
+        private var velocityX = 5f
+        private var velocityY = 5f
+        private var platformX = 200f
+        private var platformWidth = 200f
+        private var isGameOver = false
+
+        private val paint = Paint().apply {
+            color = Color.RED
+        }
+
+        constructor(context: Context) : super(context)
+        constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
+
+        override fun onDraw(canvas: Canvas) {
+            super.onDraw(canvas)
+            if (!isGameOver) {
+                canvas.drawCircle(ballX, ballY, ballRadius, paint)
+                canvas.drawRect(
+                    platformX,
+                    height.toFloat() - 20,
+                    platformX + platformWidth,
+                    height.toFloat(),
+                    paint
+                )
+                updateBallPosition()
+            } else {
+                // Display game over message
+                val gameOverPaint = Paint().apply {
+                    color = Color.RED
+                    textSize = 50f
+                }
+                canvas.drawText(
+                    "Game Over",
+                    (width / 2).toFloat(),
+                    (height / 2).toFloat(),
+                    gameOverPaint
+                )
+            }
+            invalidate() // Request a redraw
+        }
+
+        private fun updateBallPosition() {
+            if (!isGameOver) {
+                // Update ball position based on velocity
+                ballX += velocityX
+                ballY += velocityY
+
+                // Constrain ball within screen boundaries
+                if (ballX - ballRadius < 0 || ballX + ballRadius > width) {
+                    velocityX = -velocityX
+                }
+
+                if (ballY - ballRadius < 0) {
+                    velocityY = -velocityY
+                }
+
+                // Check if the ball falls to the ground
+                if (ballY + ballRadius > height) {
+                    isGameOver = true
+                }
+
+                // Detect collisions with platform (if implemented)
+                if (ballY + ballRadius > height - 20 && ballX > platformX && ballX < platformX + platformWidth) {
+                    velocityY = -velocityY
+                    score++
+                    scoreTextView.text = "Score: $score"
+                }
+            }
+        }
+
+        fun handleKeyPress(keyCode: Int) {
+            if (!isGameOver) {
+                // Move the platform based on key presses
+                when (keyCode) {
+                    KeyEvent.KEYCODE_DPAD_LEFT -> platformX -= 20
+                    KeyEvent.KEYCODE_DPAD_RIGHT -> platformX += 20
+                }
+
+                // Constrain platform within screen boundaries
+                platformX = platformX.coerceIn(0f, width - platformWidth)
+            }
+        }
+    }
+}
